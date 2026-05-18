@@ -1,0 +1,61 @@
+{
+  "name": "Api Rucher - Gestion Inventaire Ruches",
+  "short_name": "Api Rucher",
+  "description": "Application de gestion d'inventaire pour ruches et ruchettes avec support offline",
+  "start_url": "./formulaire_inventaire.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#FFA500",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23FFA500' width='192' height='192'/><text x='50%' y='50%' font-size='120' fill='white' text-anchor='middle' dominant-baseline='middle' font-family='Arial'>🐝</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect fill='%23FFA500' width='512' height='512'/><text x='50%' y='50%' font-size='300' fill='white' text-anchor='middle' dominant-baseline='middle' font-family='Arial'>🐝</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity"],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 540 720'><rect fill='%23ffffff' width='540' height='720'/><rect fill='%23FFA500' y='0' width='540' height='60'/><text x='50%' y='30' font-size='24' fill='white' text-anchor='middle' dominant-baseline='middle'>Api Rucher</text></svg>",
+      "sizes": "540x720",
+      "type": "image/svg+xml",
+      "form_factor": "narrow"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Arrivée",
+      "short_name": "Arrivée",
+      "description": "Enregistrer une arrivée",
+      "url": "./formulaire_inventaire.html?tab=arrivee",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%234CAF50' width='96' height='96' rx='8'/><text x='50%' y='50%' font-size='60' text-anchor='middle' dominant-baseline='middle'>⬇️</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    },
+    {
+      "name": "Départ",
+      "short_name": "Départ",
+      "description": "Enregistrer un départ",
+      "url": "./formulaire_inventaire.html?tab=depart",
+      "icons": [
+        {
+          "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'><rect fill='%23f44336' width='96' height='96' rx='8'/><text x='50%' y='50%' font-size='60' text-anchor='middle' dominant-baseline='middle'>⬆️</text></svg>",
+          "sizes": "96x96",
+          "type": "image/svg+xml"
+        }
+      ]
+    }
+  ]
+}
