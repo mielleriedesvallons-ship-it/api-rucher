@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FFA500">
+    <title>Api Rucher - Inventaire</title>
+    <link rel="manifest" href="manifest.json">
+    <style>
+        :root { color-scheme: light; --primary: #FFA500; --primary-dark: #E89400; --success: #4CAF50; --error: #f44336; --light: #f5f5f5; --dark: #333; --border: #ddd; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, var(--light) 0%, #fff 100%); color: var(--dark); min-height: 100vh; padding: 10px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 20px; text-align: center; }
+        .header h1 { font-size: 28px; margin-bottom: 5px; }
+        .status { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--light); border-bottom: 1px solid var(--border); font-size: 14px; }
+        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .status-dot.online { background: var(--success); }
+        .status-dot.offline { background: var(--error); }
+        .tabs { display: flex; border-bottom: 2px solid var(--border); background: var(--light); overflow-x: auto; }
+        .tab-button { flex: 1; padding: 15px 10px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; }
+        .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .tab-content { display: none; padding: 20px; }
+        .tab-content.active { display: block; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        button { padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
+        .btn-submit { background: var(--primary); color: white; }
+        .btn-reset { background: var(--light); border: 2px solid var(--border); }
+        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: none; }
+        .alert.show { display: block; }
+        .alert.success { background: #d4edda; color: #155724; }
+        .alert.error { background: #f8d7da; color: #721c24; }
+        .stock-display { background: var(--light); padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
+        .footer { padding: 15px 20px; background: var(--light); border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🐝 Api Rucher</h1>
+            <p>Gestion Inventaire Ruches & Ruchettes</p>
+        </div>
+
+        <div class="status">
+            <div><span class="status-dot online" id="statusDot"></span> <span id="statusText">🟢 En ligne</span></div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-button active" data-tab="transfer">Transfert</button>
+            <button class="tab-button" data-tab="arrivee">Arrivée</button>
+            <button class="tab-button" data-tab="depart">Départ</button>
+            <button class="tab-button" data-tab="composition">Composition</button>
+            <button class="tab-button" data-tab="create-rucher">+ Rucher</button>
+        </div>
+
+        <div id="alerts"></div>
+
+        <!-- TRANSFERT -->
+        <div id="transfer" class="tab-content active">
+            <form id="formTransfer">
+                <div class="form-group">
+                    <label>Rucher Source *</label>
+                    <select id="transferSource" required>
+                        <option value="">Sélectionnez...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Rucher Destination *</label>
+                    <select id="transferDest" required>
+                        <option value="">Sélectionnez...</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ruches</label>
+                        <input type="number" id="transferRuches" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Ruchettes</label>
+                        <input type="number" id="transferRuchettes" min="0" value="0">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Raison</label>
+                    <select id="transferReason">
+                        <option value="rééquilibrage">Rééquilibrage</option>
+                        <option value="santé">Santé</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Justification</label>
+                    <textarea id="transferJustif" placeholder="Détails..."></textarea>
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- ARRIVÉE -->
+        <div id="arrivee" class="tab-content">
+            <form id="formArrivee">
+                <div class="form-group">
+                    <label>Rucher *</label>
+                    <select id="arriveeRucher" required><option value="">Sélectionnez...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Source *</label>
+                    <select id="arriveeSource" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="creation">Création colonie</option>
+                        <option value="essaim">Essaim</option>
+                        <option value="achat">Achat</option>
+                        <option value="don">Don</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ruches</label>
+                        <input type="number" id="arriveeRuches" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Ruchettes</label>
+                        <input type="number" id="arriveeRuchettes" min="0" value="0">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- DÉPART -->
+        <div id="depart" class="tab-content">
+            <form id="formDepart">
+                <div class="form-group">
+                    <label>Rucher *</label>
+                    <select id="departRucher" required><option value="">Sélectionnez...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Motif *</label>
+                    <select id="departMotif" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="mortalité">Mortalité</option>
+                        <option value="vol">Vol</option>
+                        <option value="vente">Vente</option>
+                        <option value="don">Don</option>
+                    </select>
+                </div>
+                <div class="form-group" id="causeGroup" style="display:none;">
+                    <label>Cause (Obligatoire) *</label>
+                    <textarea id="departCause" placeholder="Détails..."></textarea>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ruches</label>
+                        <input type="number" id="departRuches" min="0" value="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Ruchettes</label>
+                        <input type="number" id="departRuchettes" min="0" value="0">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- COMPOSITION -->
+        <div id="composition" class="tab-content">
+            <form id="formComposition">
+                <div class="form-group">
+                    <label>Rucher *</label>
+                    <select id="compRucher" required><option value="">Sélectionnez...</option></select>
+                </div>
+                <div class="form-group">
+                    <label>Paramètre *</label>
+                    <select id="compParam" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="hausses">Hausses</option>
+                        <option value="cadres">Cadres</option>
+                        <option value="reine">Reine</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Avant</label>
+                        <input type="text" id="compBefore">
+                    </div>
+                    <div class="form-group">
+                        <label>Après</label>
+                        <input type="text" id="compAfter">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Enregistrer</button>
+            </form>
+        </div>
+
+        <!-- CRÉER RUCHER -->
+        <div id="create-rucher" class="tab-content">
+            <form id="formCreateRucher">
+                <div class="form-group">
+                    <label>Nom du Rucher *</label>
+                    <input type="text" id="createName" required placeholder="Ex: Bourg des Comtes">
+                </div>
+                <div class="form-group">
+                    <label>Localisation</label>
+                    <input type="text" id="createLocalisation" placeholder="Lieu">
+                </div>
+                <div class="form-group">
+                    <label>Propriétaire</label>
+                    <input type="text" id="createProp">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" id="createEmail">
+                    </div>
+                    <div class="form-group">
+                        <label>Téléphone</label>
+                        <input type="tel" id="createTel">
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit">Créer Rucher</button>
+            </form>
+        </div>
+
+        <div class="footer">
+            <p>Api Rucher v1.0 | Offline capable | © 2026</p>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
