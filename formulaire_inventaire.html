@@ -4,38 +4,408 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#FFA500">
+    <meta name="description" content="Api Rucher - Gestion inventaire ruches et ruchettes">
     <title>Api Rucher - Inventaire</title>
     <link rel="manifest" href="manifest.json">
     <style>
-        :root { color-scheme: light; --primary: #FFA500; --primary-dark: #E89400; --success: #4CAF50; --error: #f44336; --light: #f5f5f5; --dark: #333; --border: #ddd; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif; background: linear-gradient(135deg, var(--light) 0%, #fff 100%); color: var(--dark); min-height: 100vh; padding: 10px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
-        .header { background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%); color: white; padding: 20px; text-align: center; }
-        .header h1 { font-size: 28px; margin-bottom: 5px; }
-        .status { display: flex; justify-content: space-between; align-items: center; padding: 10px 20px; background: var(--light); border-bottom: 1px solid var(--border); font-size: 14px; }
-        .status-dot { width: 12px; height: 12px; border-radius: 50%; }
-        .status-dot.online { background: var(--success); }
-        .status-dot.offline { background: var(--error); }
-        .tabs { display: flex; border-bottom: 2px solid var(--border); background: var(--light); overflow-x: auto; }
-        .tab-button { flex: 1; padding: 15px 10px; background: none; border: none; cursor: pointer; font-size: 14px; font-weight: 600; color: #666; border-bottom: 3px solid transparent; transition: all 0.3s; white-space: nowrap; }
-        .tab-button.active { color: var(--primary); border-bottom-color: var(--primary); }
-        .tab-content { display: none; padding: 20px; }
-        .tab-content.active { display: block; }
-        .form-group { margin-bottom: 15px; }
-        label { display: block; font-size: 16px; font-weight: 600; margin-bottom: 8px; }
-        input, select, textarea { width: 100%; padding: 12px; border: 2px solid var(--border); border-radius: 8px; font-size: 16px; }
-        input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        button { padding: 14px; border: none; border-radius: 8px; font-size: 16px; font-weight: 600; cursor: pointer; }
-        .btn-submit { background: var(--primary); color: white; }
-        .btn-reset { background: var(--light); border: 2px solid var(--border); }
-        .alert { padding: 12px 16px; border-radius: 8px; margin-bottom: 15px; display: none; }
-        .alert.show { display: block; }
-        .alert.success { background: #d4edda; color: #155724; }
-        .alert.error { background: #f8d7da; color: #721c24; }
-        .stock-display { background: var(--light); padding: 15px; border-radius: 8px; margin-bottom: 15px; font-size: 14px; }
-        .footer { padding: 15px 20px; background: var(--light); border-top: 1px solid var(--border); text-align: center; font-size: 12px; color: #666; }
+        :root {
+            color-scheme: light;
+            --primary: #FFA500;
+            --primary-dark: #E89400;
+            --success: #4CAF50;
+            --error: #f44336;
+            --warning: #ff9800;
+            --light: #f5f5f5;
+            --dark: #333;
+            --border: #ddd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--light) 0%, #fff 100%);
+            color: var(--dark);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+            border-bottom: 4px solid var(--primary-dark);
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.95;
+        }
+
+        .status {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--light);
+            border-bottom: 2px solid var(--border);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+        }
+
+        .status-dot.offline {
+            background: var(--error);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .tabs {
+            display: flex;
+            border-bottom: 3px solid var(--border);
+            background: var(--light);
+            overflow-x: auto;
+            padding: 0 10px;
+        }
+
+        .tab-button {
+            flex: 1;
+            padding: 16px 12px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: #999;
+            border-bottom: 4px solid transparent;
+            transition: all 0.3s;
+            white-space: nowrap;
+            min-width: 80px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 165, 0, 0.08);
+            color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 25px;
+            animation: slideIn 0.3s ease-in;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group.row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .form-group.row.three {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        label {
+            display: block;
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--dark);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .required::after {
+            content: " *";
+            color: var(--error);
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 14px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(255, 165, 0, 0.1);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+            font-size: 14px;
+        }
+
+        input[type="number"] {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .help-text {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .stock-info {
+            background: linear-gradient(135deg, #E8F5E9 0%, #F1F8E9 100%);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 13px;
+        }
+
+        .stock-info h4 {
+            color: var(--success);
+            margin-bottom: 8px;
+            font-weight: 700;
+        }
+
+        .stock-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid rgba(76, 175, 80, 0.2);
+        }
+
+        .stock-row:last-child {
+            border-bottom: none;
+        }
+
+        .stock-label {
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .stock-value {
+            background: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .button-group {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 25px;
+        }
+
+        button {
+            padding: 14px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-submit {
+            background: var(--primary);
+            color: white;
+            grid-column: 1 / -1;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(255, 165, 0, 0.3);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        .btn-reset {
+            background: var(--light);
+            color: var(--dark);
+            border: 2px solid var(--border);
+        }
+
+        .btn-reset:hover {
+            background: #eee;
+            border-color: var(--dark);
+        }
+
+        .alert {
+            padding: 14px 16px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            display: none;
+            border-left: 4px solid;
+            animation: slideIn 0.3s ease-in;
+        }
+
+        .alert.show {
+            display: block;
+        }
+
+        .alert.success {
+            background: #d4edda;
+            color: #155724;
+            border-left-color: var(--success);
+        }
+
+        .alert.error {
+            background: #f8d7da;
+            color: #721c24;
+            border-left-color: var(--error);
+        }
+
+        .alert.warning {
+            background: #fff3cd;
+            color: #856404;
+            border-left-color: var(--warning);
+        }
+
+        .alert.info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border-left-color: #17a2b8;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 20px 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--dark);
+        }
+
+        .spinner {
+            border: 4px solid var(--light);
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .footer {
+            padding: 20px;
+            background: var(--light);
+            border-top: 2px solid var(--border);
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+        }
+
+        @media (max-width: 600px) {
+            .header h1 { font-size: 26px; }
+            .tab-button { font-size: 12px; padding: 12px 8px; }
+            .form-group.row { grid-template-columns: 1fr; }
+            .form-group.row.three { grid-template-columns: 1fr; }
+            .button-group { grid-template-columns: 1fr; }
+            .btn-submit { grid-column: 1; }
+            input, select, textarea { font-size: 16px; }
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checkbox-group input {
+            width: auto;
+        }
+
+        .field-hint {
+            background: var(--light);
+            padding: 10px;
+            border-radius: 6px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: #666;
+            border-left: 3px solid var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -46,7 +416,11 @@
         </div>
 
         <div class="status">
-            <div><span class="status-dot online" id="statusDot"></span> <span id="statusText">🟢 En ligne</span></div>
+            <div class="status-indicator">
+                <div class="status-dot online" id="statusDot"></div>
+                <span id="statusText">🟢 En ligne</span>
+            </div>
+            <div id="pendingCount" style="display:none; color: var(--warning); font-weight: 700;">📦 En attente de sync</div>
         </div>
 
         <div class="tabs">
@@ -57,176 +431,323 @@
             <button class="tab-button" data-tab="create-rucher">+ Rucher</button>
         </div>
 
-        <div id="alerts"></div>
+        <div id="alerts" style="padding: 10px 25px; margin-top: 0;"></div>
 
         <!-- TRANSFERT -->
         <div id="transfer" class="tab-content active">
             <form id="formTransfer">
-                <div class="form-group">
-                    <label>Rucher Source *</label>
-                    <select id="transferSource" required>
-                        <option value="">Sélectionnez...</option>
-                    </select>
+                <div class="stock-info" id="stockTransfer"></div>
+
+                <div class="section-title">Paramètres du Transfert</div>
+
+                <div class="form-group row">
+                    <div>
+                        <label class="required">Rucher Source</label>
+                        <select id="transferSource" required>
+                            <option value="">Sélectionnez...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="required">Rucher Destination</label>
+                        <select id="transferDest" required>
+                            <option value="">Sélectionnez...</option>
+                        </select>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label>Rucher Destination *</label>
-                    <select id="transferDest" required>
-                        <option value="">Sélectionnez...</option>
-                    </select>
-                </div>
-                <div class="form-row">
-                    <div class="form-group">
+
+                <div class="section-title">Quantités</div>
+
+                <div class="form-group row three">
+                    <div>
                         <label>Ruches</label>
                         <input type="number" id="transferRuches" min="0" value="0">
+                        <div class="help-text">Nombre de ruches</div>
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label>Ruchettes</label>
                         <input type="number" id="transferRuchettes" min="0" value="0">
+                        <div class="help-text">Nombre de ruchettes</div>
+                    </div>
+                    <div>
+                        <label>Hausses</label>
+                        <input type="number" id="transferHausses" min="0" value="0">
+                        <div class="help-text">Nombre de hausses</div>
                     </div>
                 </div>
+
+                <div class="section-title">Motifs et Détails</div>
+
                 <div class="form-group">
-                    <label>Raison</label>
+                    <label>Raison du Transfert</label>
                     <select id="transferReason">
-                        <option value="rééquilibrage">Rééquilibrage</option>
-                        <option value="santé">Santé</option>
+                        <option value="rééquilibrage">Rééquilibrage (population)</option>
+                        <option value="santé">Santé (traitement, prophylaxie)</option>
+                        <option value="essaimage">Essaimage (capture essaim)</option>
                         <option value="autre">Autre</option>
                     </select>
                 </div>
+
                 <div class="form-group">
-                    <label>Justification</label>
-                    <textarea id="transferJustif" placeholder="Détails..."></textarea>
+                    <label>Justification Détaillée</label>
+                    <textarea id="transferJustif" placeholder="Exemple: Rucher A surpeuplé, Rucher B faible. Rééquilibrage nécessaire pour éviter essaimage."></textarea>
+                    <div class="field-hint">💡 Plus la justification est détaillée, mieux c'est pour les audits.</div>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+
+                <div class="form-group">
+                    <label>Notes Supplémentaires (Optionnel)</label>
+                    <textarea id="transferNotes" placeholder="Observations sur les colonies, état sanitaire, etc."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">📤 Enregistrer Transfert</button>
+                    <button type="reset" class="btn-reset">Annuler</button>
+                </div>
             </form>
         </div>
 
         <!-- ARRIVÉE -->
         <div id="arrivee" class="tab-content">
             <form id="formArrivee">
+                <div class="section-title">Informations Arrivée</div>
+
                 <div class="form-group">
-                    <label>Rucher *</label>
-                    <select id="arriveeRucher" required><option value="">Sélectionnez...</option></select>
-                </div>
-                <div class="form-group">
-                    <label>Source *</label>
-                    <select id="arriveeSource" required>
+                    <label class="required">Rucher Destination</label>
+                    <select id="arriveeRucher" required>
                         <option value="">Sélectionnez...</option>
-                        <option value="creation">Création colonie</option>
-                        <option value="essaim">Essaim</option>
-                        <option value="achat">Achat</option>
-                        <option value="don">Don</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
+
+                <div class="form-group">
+                    <label class="required">Source de l'Arrivée</label>
+                    <select id="arriveeSource" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="creation">Création colonie (division)</option>
+                        <option value="essaim">Essaim naturel capturé</option>
+                        <option value="achat">Achat (nucs ou ruches)</option>
+                        <option value="don">Don reçu</option>
+                        <option value="promotion">Promotion ruchette → ruche</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="parentGroup" style="display: none;">
+                    <label>Rucher Parent (si création)</label>
+                    <select id="arriveeParent">
+                        <option value="">Non applicable</option>
+                    </select>
+                    <div class="field-hint">🔗 Traçabilité : colonie mère originaire de quel rucher?</div>
+                </div>
+
+                <div class="section-title">Quantités</div>
+
+                <div class="form-group row three">
+                    <div>
                         <label>Ruches</label>
                         <input type="number" id="arriveeRuches" min="0" value="0">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label>Ruchettes</label>
                         <input type="number" id="arriveeRuchettes" min="0" value="0">
                     </div>
+                    <div>
+                        <label>Hausses</label>
+                        <input type="number" id="arriveeHausses" min="0" value="0">
+                    </div>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="arriveeNotes" placeholder="Exemple: 2 nucs avec reine italienne, achetés à l'apiculteur X le 15/05"></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">📥 Enregistrer Arrivée</button>
+                    <button type="reset" class="btn-reset">Annuler</button>
+                </div>
             </form>
         </div>
 
         <!-- DÉPART -->
         <div id="depart" class="tab-content">
             <form id="formDepart">
+                <div class="stock-info" id="stockDepart"></div>
+
+                <div class="section-title">Informations Départ</div>
+
                 <div class="form-group">
-                    <label>Rucher *</label>
-                    <select id="departRucher" required><option value="">Sélectionnez...</option></select>
-                </div>
-                <div class="form-group">
-                    <label>Motif *</label>
-                    <select id="departMotif" required>
+                    <label class="required">Rucher Source</label>
+                    <select id="departRucher" required>
                         <option value="">Sélectionnez...</option>
-                        <option value="mortalité">Mortalité</option>
-                        <option value="vol">Vol</option>
-                        <option value="vente">Vente</option>
-                        <option value="don">Don</option>
                     </select>
                 </div>
-                <div class="form-group" id="causeGroup" style="display:none;">
-                    <label>Cause (Obligatoire) *</label>
-                    <textarea id="departCause" placeholder="Détails..."></textarea>
+
+                <div class="form-group">
+                    <label class="required">Motif du Départ</label>
+                    <select id="departMotif" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="mortalité">Mortalité (⚠️ cause obligatoire)</option>
+                        <option value="vol">Vol (⚠️ cause obligatoire)</option>
+                        <option value="vente">Vente (nucs ou ruches)</option>
+                        <option value="don">Don (partage)</option>
+                        <option value="réduction">Réduction colonie (fusion)</option>
+                        <option value="essaimage">Essaimage naturel</option>
+                    </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
+
+                <div class="form-group" id="causeGroup" style="display: none;">
+                    <label class="required">Cause (Obligatoire pour Mortalité/Vol)</label>
+                    <textarea id="departCause" placeholder="Exemple pour mortalité: Nosema detecté en mars, colonie affaiblie. Ou: Coup de froid en avril, abeilles figées."></textarea>
+                    <div class="field-hint">⚠️ Détail obligatoire - ceci devient une preuve d'activité apicole responsable.</div>
+                </div>
+
+                <div class="section-title">Quantités</div>
+
+                <div class="form-group row three">
+                    <div>
                         <label>Ruches</label>
                         <input type="number" id="departRuches" min="0" value="0">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label>Ruchettes</label>
                         <input type="number" id="departRuchettes" min="0" value="0">
                     </div>
+                    <div>
+                        <label>Hausses</label>
+                        <input type="number" id="departHausses" min="0" value="0">
+                    </div>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+
+                <div class="form-group">
+                    <label>Notes Supplémentaires</label>
+                    <textarea id="departNotes" placeholder="Observations additionnelles..."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">📤 Enregistrer Départ</button>
+                    <button type="reset" class="btn-reset">Annuler</button>
+                </div>
             </form>
         </div>
 
         <!-- COMPOSITION -->
         <div id="composition" class="tab-content">
             <form id="formComposition">
+                <div class="section-title">Modification Composition</div>
+
                 <div class="form-group">
-                    <label>Rucher *</label>
-                    <select id="compRucher" required><option value="">Sélectionnez...</option></select>
-                </div>
-                <div class="form-group">
-                    <label>Paramètre *</label>
-                    <select id="compParam" required>
+                    <label class="required">Rucher</label>
+                    <select id="compRucher" required>
                         <option value="">Sélectionnez...</option>
-                        <option value="hausses">Hausses</option>
-                        <option value="cadres">Cadres</option>
-                        <option value="reine">Reine</option>
                     </select>
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Avant</label>
-                        <input type="text" id="compBefore">
+
+                <div class="form-group">
+                    <label class="required">Paramètre à Modifier</label>
+                    <select id="compParam" required>
+                        <option value="">Sélectionnez...</option>
+                        <option value="hausses">Hausses (ajout/retrait)</option>
+                        <option value="cadres">Cadres (complément)</option>
+                        <option value="reine">Reine (changement/ajout)</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                </div>
+
+                <div class="section-title">État Avant/Après</div>
+
+                <div class="form-group row">
+                    <div>
+                        <label>État Avant</label>
+                        <input type="text" id="compBefore" placeholder="Exemple: 1 hausse, 10 cadres">
                     </div>
-                    <div class="form-group">
-                        <label>Après</label>
-                        <input type="text" id="compAfter">
+                    <div>
+                        <label>État Après</label>
+                        <input type="text" id="compAfter" placeholder="Exemple: 2 hausses, 12 cadres">
                     </div>
                 </div>
-                <button type="submit" class="btn-submit">Enregistrer</button>
+
+                <div class="form-group">
+                    <label>Raison de la Modification</label>
+                    <textarea id="compReason" placeholder="Exemple: Ajout 2ème hausse avant récolte. Ou: Changement de reine à cause épuisement reproduction."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">💾 Enregistrer Composition</button>
+                    <button type="reset" class="btn-reset">Annuler</button>
+                </div>
             </form>
         </div>
 
         <!-- CRÉER RUCHER -->
         <div id="create-rucher" class="tab-content">
             <form id="formCreateRucher">
-                <div class="form-group">
-                    <label>Nom du Rucher *</label>
-                    <input type="text" id="createName" required placeholder="Ex: Bourg des Comtes">
+                <div class="alert info" style="display: block; margin-bottom: 20px;">
+                    <strong>✏️ Créer un Nouveau Rucher</strong><br>
+                    Seul le nom est obligatoire. Remplissez les autres champs selon vos besoins.
                 </div>
+
+                <div class="section-title">Informations Rucher</div>
+
+                <div class="form-group">
+                    <label class="required">Nom du Rucher</label>
+                    <input type="text" id="createName" required placeholder="Ex: Bourg des Comtes, le Tertre">
+                    <div class="field-hint">Doit être unique et reconnaissable</div>
+                </div>
+
                 <div class="form-group">
                     <label>Localisation</label>
-                    <input type="text" id="createLocalisation" placeholder="Lieu">
+                    <input type="text" id="createLocalisation" placeholder="Commune, lieu-dit">
                 </div>
+
+                <div class="section-title">Propriétaire / Gestionnaire</div>
+
                 <div class="form-group">
-                    <label>Propriétaire</label>
-                    <input type="text" id="createProp">
+                    <label>Nom</label>
+                    <input type="text" id="createProp" placeholder="Nom du propriétaire ou gestionnaire">
                 </div>
-                <div class="form-row">
-                    <div class="form-group">
+
+                <div class="form-group row">
+                    <div>
                         <label>Email</label>
-                        <input type="email" id="createEmail">
+                        <input type="email" id="createEmail" placeholder="proprietaire@email.com">
                     </div>
-                    <div class="form-group">
+                    <div>
                         <label>Téléphone</label>
-                        <input type="tel" id="createTel">
+                        <input type="tel" id="createTel" placeholder="06 XX XX XX XX">
                     </div>
                 </div>
-                <button type="submit" class="btn-submit">Créer Rucher</button>
+
+                <div class="section-title">Détails Techniques</div>
+
+                <div class="form-group row">
+                    <div>
+                        <label>Date Installation</label>
+                        <input type="date" id="createDate">
+                    </div>
+                    <div>
+                        <label>Coordonnées GPS</label>
+                        <input type="text" id="createGPS" placeholder="48.1234, -1.5678">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>Dernier Entretien</label>
+                    <input type="date" id="createEntretien">
+                </div>
+
+                <div class="form-group">
+                    <label>Notes Générales</label>
+                    <textarea id="createNotes" placeholder="Type de ruches, altitude, protection vent, etc."></textarea>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="btn-submit">✅ Créer Rucher</button>
+                    <button type="reset" class="btn-reset">Annuler</button>
+                </div>
             </form>
         </div>
 
         <div class="footer">
-            <p>Api Rucher v1.0 | Offline capable | © 2026</p>
+            <p>🐝 Api Rucher v2.0 | Offline-capable | © 2026</p>
+            <p style="margin-top: 8px; font-size: 11px;">Chaque opération est tracée et validée. Rien ne disparaît sans justification.</p>
         </div>
     </div>
 
